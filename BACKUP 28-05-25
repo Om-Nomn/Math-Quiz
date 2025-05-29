@@ -1,0 +1,105 @@
+import tkinter as tk
+import random
+from tkinter import messagebox
+
+class MathCardGame(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("Card Math Game")
+        self.geometry("1200x900")
+        self.configure(bg="#f0f0f0")
+
+        # Load images into a dictionary for values 1 to 15 (card images)
+        self.images = {
+            i: tk.PhotoImage(file=fr"Images\pixil-frame-{i}.png")
+            for i in range(1, 16)
+        }
+
+        # Load images for operators
+        self.operator_images = {
+            '+': tk.PhotoImage(file=fr"Images\pixil-frame-20.png"),
+            '-': tk.PhotoImage(file=fr"Images\pixil-frame-17.png"),
+            '*': tk.PhotoImage(file=fr"Images\pixil-frame-18.png"),
+            '/': tk.PhotoImage(file=fr"Images\pixil-frame-19.png"),
+        }
+
+        self.cards = []
+        self.target = 0
+        self.expression = ""
+
+        self.create_widgets()
+        self.new_round()  # Start first round
+
+    def create_widgets(self):
+        # Top control buttons: Target, Submit, and Reset
+        top_frame = tk.Frame(self, bg="#f0f0f0")
+        top_frame.pack(pady=10, fill=tk.X)
+
+        self.target_label = tk.Label(top_frame, text="", font=("Arial", 28))
+        self.target_label.pack(side=tk.RIGHT, padx=10)
+        tk.Button(top_frame, text="Submit", command=self.check_result).pack(side=tk.LEFT, padx=10)
+        tk.Button(top_frame, text="Reset", command=self.reset_expression).pack(side=tk.LEFT, padx=10)
+
+        # Game section: Expression
+        game_frame = tk.Frame(self, bg="#f0f0f0")
+        game_frame.pack(pady=10)
+
+        # Expression section (centered)
+        expr_frame = tk.Frame(game_frame, bg="black")
+        expr_frame.pack(pady=5)
+        self.expr_label = tk.Label(expr_frame, text="", font=("Comic Sans MS", 16), bg="white", width=15, height=2)
+        self.expr_label.pack(side=tk.BOTTOM, pady=5)
+
+        # Bottom section for the card buttons (cards and operators)
+        self.card_button_frame = tk.Frame(self, bg="black")
+        self.card_button_frame.pack(side=tk.BOTTOM, pady=30)
+
+    def new_round(self):
+        # Generate new cards and target
+        self.cards = [random.randint(1, 15) for _ in range(4)]
+        self.target = random.randint(1, 100)
+        self.expression = ""
+        self.expr_label.config(text="")
+        self.target_label.config(text=f"Target: {self.target}")
+
+        # Clear old buttons
+        for widget in self.card_button_frame.winfo_children():
+            widget.destroy()
+
+        # Re-create card buttons
+        for value in self.cards:
+            image = self.images.get(value)
+            card_button = tk.Button(self.card_button_frame, bg='#786705', image=image, width=97, height=120, 
+                                    command=lambda v=value, b=None: self.add_to_expression(v, card_button))
+            card_button.image = image
+            card_button.pack(side=tk.LEFT, padx=1)
+
+        # Re-create operator buttons
+        for op, image in self.operator_images.items():
+            op_button = tk.Button(self.card_button_frame, bg='#786705', image=image, width=97, height=120, 
+                                  command=lambda o=op, b=None: self.add_to_expression(o, op_button))
+            op_button.image = image
+            op_button.pack(side=tk.LEFT, padx=1)
+
+    def add_to_expression(self, val, btn):
+        self.expression += str(val)
+        self.expr_label.config(text=self.expression)
+
+    def check_result(self):
+        try:
+            result = eval(self.expression)
+            if abs(result - self.target) < 0.001:
+                messagebox.showinfo("Success", "You matched the target!")
+                self.new_round()
+            else:
+                messagebox.showwarning("Try Again", f"Result: {result}, Target: {self.target}")
+        except Exception:
+            messagebox.showerror("Error", "Invalid expression")
+
+    def reset_expression(self):
+        self.expression = ""
+        self.expr_label.config(text="")
+
+if __name__ == "__main__":
+    app = MathCardGame()
+    app.mainloop()
